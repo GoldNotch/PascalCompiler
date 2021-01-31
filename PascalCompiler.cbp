@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="PascalCompiler" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option virtualFolders="Stages/;Types/" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/PascalCompiler" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/PascalCompiler" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-std=c++17" />
+			<Add option="-g" />
+		</Compiler>
+		<Linker>
+			<Add option="-static-libstdc++" />
+		</Linker>
+		<Unit filename="Compiler.cpp" />
+		<Unit filename="Compiler.h" />
+		<Unit filename="Stages/LexicalProcessor.cpp">
+			<Option compilerVar="CC" />
+			<Option virtualFolder="Stages/" />
+		</Unit>
+		<Unit filename="Stages/LexicalProcessor.h">
+			<Option virtualFolder="Stages/" />
+		</Unit>
+		<Unit filename="Stages/Preprocessor.h">
+			<Option virtualFolder="Stages/" />
+		</Unit>
+		<Unit filename="Types/Constant.h">
+			<Option virtualFolder="Types/" />
+		</Unit>
+		<Unit filename="Types/PascalKeywords.h">
+			<Option virtualFolder="Types/" />
+		</Unit>
+		<Unit filename="Types/Token.h">
+			<Option virtualFolder="Types/" />
+		</Unit>
+		<Unit filename="main.cpp">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

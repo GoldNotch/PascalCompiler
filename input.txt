@@ -1,0 +1,9 @@
+program test;
+begin
+a := 10;
+b := 10.01;
+c := 'test123';
+d[5] := 0.0;
+d[3] := 1;
+y = 2 * f(x) - 1.5;
+end.
