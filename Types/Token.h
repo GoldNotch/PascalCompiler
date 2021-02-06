@@ -16,6 +16,7 @@ class AbstactToken
 public:
     AbstactToken(TokenType type){this->Type = type;}
     TokenType getType() const {return this->Type;}
+    std::string toString() const;
     virtual ~AbstactToken(){}
 protected:
     TokenType Type;

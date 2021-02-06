@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 enum ConstantType
 {
@@ -13,6 +14,7 @@ class AbstactConstant
 public:
     AbstactConstant(ConstantType type){this->type = type;}
     ConstantType getType() const {return this->type;}
+    std::string toString() const;
     virtual ~AbstactConstant(){}
 protected:
     ConstantType type;

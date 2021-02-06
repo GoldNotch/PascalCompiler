@@ -49,10 +49,16 @@
 		<Unit filename="Stages/Preprocessor.h">
 			<Option virtualFolder="Stages/" />
 		</Unit>
+		<Unit filename="Types/Constant.cpp">
+			<Option virtualFolder="Types/" />
+		</Unit>
 		<Unit filename="Types/Constant.h">
 			<Option virtualFolder="Types/" />
 		</Unit>
 		<Unit filename="Types/PascalKeywords.h">
+			<Option virtualFolder="Types/" />
+		</Unit>
+		<Unit filename="Types/Token.cpp">
 			<Option virtualFolder="Types/" />
 		</Unit>
 		<Unit filename="Types/Token.h">

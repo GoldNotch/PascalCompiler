@@ -30,7 +30,11 @@ int main(int argc, char* argv[])
         text_program[file_size] = '\0';
 
         void* program;
-        Compile(text_program, program);
+        std::vector<comp_error_t> errors = Compile(text_program, program);
+        for(size_t i = 0; i < errors.size(); i++)
+        {
+            printf("ERROR: %i(%i, %i)\n", errors[i].code, errors[i].row, errors[i].col);
+        }
 
         free(text_program);
         fclose(in);

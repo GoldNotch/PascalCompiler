@@ -13,7 +13,7 @@ enum LexemeType
     LEXEME_STRING_CONST   //'any ascii symbol*'
   //[:=<>+\-*\/\(\)\{\}\[\]'^,;]+
 };
-AbstactToken* ParseToken(LexemeType type, const std::string& lexeme);
+comp_error_t ParseToken(LexemeType type, const std::string& lexeme, AbstactToken** out_token);
 
 LexicalProcessor::LexicalProcessor()
 {
@@ -35,8 +35,8 @@ void LexicalProcessor::bindText(const char* text)
 {
     this->text = text;
     this->last_token_position = 0;
-    this->current_row = 0;
-    this->current_column = 0;
+    this->current_row = 1;
+    this->current_column = 1;
 }
 
 comp_error_t LexicalProcessor::getNextToken(AbstactToken** token)
@@ -80,8 +80,9 @@ comp_error_t LexicalProcessor::getNextToken(AbstactToken** token)
                         error.row = this->current_row;
                         error.col = this->current_column;
                     }
-                    //если встретилась цифра
-                    else if (isdigit(symbol))
+                    //если встретилась цифра или унарный минус или плюс
+                    else if (isdigit(symbol) ||
+                             ((symbol == '-' || symbol == '+') && isdigit(lexeme[symbol_index + 1])))
                         state = STATE_INT;
                     //если встретилась буква или нижнее подчеркивание
                     else if (isalpha(symbol) || symbol == '_')
@@ -151,14 +152,19 @@ comp_error_t LexicalProcessor::getNextToken(AbstactToken** token)
     //переводим лексему в std::string
     std::string value(lexeme, symbol_index);
     if (!error.code){
-        *token = ParseToken(lexeme_type, value);
+        error = ParseToken(lexeme_type, value, token);
+        if (error.code)
+        {
+            error.col = this->current_column;
+            error.row = this->current_row;
+        }
     }
     //пропускаем пробельные символы
     while(isspace(lexeme[symbol_index])){
         if (lexeme[symbol_index] == '\n')
         {
             this->current_row++;
-            this->current_column = 0;
+            this->current_column = 1;
         }
         symbol_index++;
     }
@@ -166,9 +172,12 @@ comp_error_t LexicalProcessor::getNextToken(AbstactToken** token)
     return error;
 }
 
-AbstactToken* ParseToken(LexemeType type, const std::string& lexeme)
+comp_error_t ParseToken(LexemeType type, const std::string& lexeme, AbstactToken** out_token)
 {
     AbstactToken* token = nullptr;
+    comp_error_t err;
+    err.code = NO_ERRORS;
+
     switch(type)
     {
     case LEXEME_IDENTIFIER:
@@ -180,7 +189,14 @@ AbstactToken* ParseToken(LexemeType type, const std::string& lexeme)
         } break;
     case LEXEME_INT_CONST:
         {
-            int32_t value = std::stoi(lexeme);
+            int32_t value;
+            try{
+                value = std::stoi(lexeme);
+            }
+                catch(const std::out_of_range& e) {
+                err.code = LEX_ERROR_OUT_OF_RANGE;
+                break;
+            }
             Constant<int32_t> *constant = new Constant<int32_t>(CONST_INT, value);
             token = new Token<Constant<int32_t>*>(TOKEN_CONST, constant);
         } break;
@@ -206,5 +222,7 @@ AbstactToken* ParseToken(LexemeType type, const std::string& lexeme)
         } break;
     default: {} break;
     }
-    return token;
+    if (!err.code)
+        *out_token = token;
+    return err;
 }

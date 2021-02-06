@@ -6,7 +6,7 @@ enum ErrorType
 {
     NO_ERRORS,
     LEX_ERROR_END_OF_FILE,  //конец файла
-    LEX_ERROR_OUT_OF_INT_RANGE  //выход за диапазон числа
+    LEX_ERROR_OUT_OF_RANGE  //выход за диапазон числа
 };
 
 struct comp_error_t

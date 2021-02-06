@@ -4,13 +4,13 @@
 	<stddef.h>
 	<stdlib.h>
 
-1612102920 source:d:\homework\compilers\pascalcompiler\main.cpp
+1612623525 source:d:\homework\compilers\pascalcompiler\main.cpp
 	<cstdio>
 	<cstddef>
 	<cstdlib>
 	"Compiler.h"
 
-1612101663 source:d:\homework\compilers\pascalcompiler\stages\lexicalprocessor.cpp
+1612623622 source:d:\homework\compilers\pascalcompiler\stages\lexicalprocessor.cpp
 	<cstdlib>
 	<cctype>
 	<algorithm>
@@ -22,7 +22,7 @@
 	"../Compiler.h"
 	"../Types/Token.h"
 
-1612100457 d:\homework\compilers\pascalcompiler\compiler.h
+1612623171 d:\homework\compilers\pascalcompiler\compiler.h
 	<cstddef>
 	<vector>
 
@@ -32,12 +32,13 @@
 
 1611825048 d:\homework\compilers\pascalcompiler\constant.h
 
-1611990063 d:\homework\compilers\pascalcompiler\types\token.h
+1612618470 d:\homework\compilers\pascalcompiler\types\token.h
 	<cstddef>
 	<string>
 	"Constant.h"
 
-1611990256 d:\homework\compilers\pascalcompiler\types\constant.h
+1612614942 d:\homework\compilers\pascalcompiler\types\constant.h
+	<string>
 
 1612100868 d:\homework\compilers\pascalcompiler\types\pascalkeywords.h
 	<cctype>
@@ -45,8 +46,17 @@
 	<map>
 	<string>
 
-1612103509 source:d:\homework\compilers\pascalcompiler\compiler.cpp
+1612623365 source:d:\homework\compilers\pascalcompiler\compiler.cpp
 	"Compiler.h"
 	"Stages/LexicalProcessor.h"
 	"Types/PascalKeywords.h"
+
+1612614945 source:d:\homework\compilers\pascalcompiler\types\constant.cpp
+	"Constant.h"
+	<sstream>
+
+1612622387 source:d:\homework\compilers\pascalcompiler\types\token.cpp
+	"Token.h"
+	<sstream>
+	"PascalKeywords.h"
 
