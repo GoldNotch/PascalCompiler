@@ -63,6 +63,7 @@ enum PascalKeyword
     KEYWORD_GREATER_THAN_OR_EQUAL,  //>=
     KEYWORD_ASSIGNMENT,             //:=
     KEYWORD_DOUBLE_DOT,             //..
+    KEYWORD_EOF,
     KEYWORD_TOTAL,
     KEYWORD_UNKNOWN,
 };
@@ -70,7 +71,7 @@ enum PascalKeyword
 static int isServiceSymbol(int symbol)
 {
     static const char* symbols = "+-*/=<>()[]:;.,^";
-    return strchr(symbols, symbol) != nullptr;
+    return strchr(symbols, symbol) != nullptr || symbol == '\0';
 }
 
 static PascalKeyword definePascalKeyword(std::string lexeme)
@@ -130,7 +131,8 @@ static PascalKeyword definePascalKeyword(std::string lexeme)
         {"<=" , KEYWORD_LESS_THAN_OR_EQUAL},
         {">=" , KEYWORD_GREATER_THAN_OR_EQUAL},
         {":=" , KEYWORD_ASSIGNMENT},
-        {".." , KEYWORD_DOUBLE_DOT}
+        {".." , KEYWORD_DOUBLE_DOT},
+        {"\0" , KEYWORD_EOF}
         };
     return keywords.find(lexeme) != keywords.end() ? keywords[lexeme] : KEYWORD_UNKNOWN;
 }

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "LexicalProcessor.h"
 #include "../Types/PascalKeywords.h"
+#include <stdio.h>
 
 enum LexemeType
 {
@@ -13,39 +14,30 @@ enum LexemeType
     LEXEME_STRING_CONST   //'any ascii symbol*'
   //[:=<>+\-*\/\(\)\{\}\[\]'^,;]+
 };
-comp_error_t ParseToken(LexemeType type, const std::string& lexeme, AbstactToken** out_token);
+comp_error_t ParseToken(LexemeType type,
+                        size_t start_row,
+                        size_t start_column,
+                        const std::string& lexeme,
+                        AbstactToken** out_token);
 
 LexicalProcessor::LexicalProcessor()
 {
-    this->text = nullptr;
-    this->last_token_position = 0;
-    this->current_row = 0;
-    this->current_column = 0;
+    reader = nullptr;
 }
 
 LexicalProcessor::~LexicalProcessor()
 {
-    this->text = nullptr;
-    this->last_token_position = 0;
-    this->current_row = 0;
-    this->current_column = 0;
+    reader = nullptr;
 }
 
-void LexicalProcessor::bindText(const char* text)
+void LexicalProcessor::bindReader(FileReader* reader)
 {
-    this->text = text;
-    this->last_token_position = 0;
-    this->current_row = 1;
-    this->current_column = 1;
+    this->reader = reader;
 }
 
 comp_error_t LexicalProcessor::getNextToken(AbstactToken** token)
 {
     *token = nullptr;
-    //лексема
-    const char* lexeme = this->text + last_token_position;
-    //позиция текущего рассматриваемого символа
-    size_t symbol_index = 0;
     //возможные состояния автомата
     enum State
     {
@@ -63,56 +55,76 @@ comp_error_t LexicalProcessor::getNextToken(AbstactToken** token)
     error.code = NO_ERRORS;
 
     LexemeType lexeme_type = LEXEME_UNKNOWN;
+    std::string lexeme = "";
+    size_t start_row = this->reader->getRowIndex();
+    size_t start_column = this->reader->getColumnIndex();
     //цикл разбора лексемы
     //здесь происходит только определение типа токена и определение его символьной длины
     while(state != STATE_LEXEMES_END)
     {
         //текущий считанный символ
-        char symbol = lexeme[symbol_index];
+        char symbol = this->reader->readSymbol();
+        char next_symbol = this->reader->peekSymbol();
         switch(state)
         {
             //находимся перед лексемой
             case STATE_NULL:
                 {
-                    if (symbol == '\0'){
-                        state = STATE_LEXEMES_END;
-                        error.code = LEX_ERROR_END_OF_FILE;
-                        error.row = this->current_row;
-                        error.col = this->current_column;
+                    //если встретилась цифра
+                    if (isdigit(symbol))
+                    {
+                        lexeme.push_back(symbol);
+                        if (next_symbol == '.')
+                            state = STATE_REAL;
+                        else if (!isdigit(next_symbol))
+                        {
+                            lexeme_type = LEXEME_INT_CONST;
+                            state = STATE_LEXEMES_END;
+                        }
+                        else
+                            state = STATE_INT;
                     }
-                    //если встретилась цифра или унарный минус или плюс
-                    else if (isdigit(symbol) ||
-                             ((symbol == '-' || symbol == '+') && isdigit(lexeme[symbol_index + 1])))
-                        state = STATE_INT;
                     //если встретилась буква или нижнее подчеркивание
-                    else if (isalpha(symbol) || symbol == '_')
+                    else if (isalpha(symbol) || symbol == '_' || symbol == '\0'){
+                        lexeme.push_back(symbol);
+                        if (isServiceSymbol(next_symbol) || isspace(next_symbol))
+                        {
+                            lexeme_type = LEXEME_IDENTIFIER;
+                            state = STATE_LEXEMES_END;
+                        }
+                        else
                         state = STATE_IDENT;
+                    }
                     //если встретилась двойная кавычка
-                    else if (symbol == '\'')
+                    else if (symbol == '\''){
+                        lexeme.push_back(symbol);
                         state = STATE_STRING;
+                    }
                     //если встретился служебный символ
                     else if (isServiceSymbol(symbol))
                     {
+                        lexeme.push_back(symbol);
                         //разбор служебного символа
-                        if ((symbol == ':' && lexeme[symbol_index + 1] == '=') ||
-                            (symbol == '.' && lexeme[symbol_index + 1] == '.') ||
-                            (symbol == '<' && lexeme[symbol_index + 1] == '>') ||
-                            (symbol == '<' && lexeme[symbol_index + 1] == '=') ||
-                            (symbol == '>' && lexeme[symbol_index + 1] == '='))
+                        if ((symbol == ':' && next_symbol == '=') ||
+                            (symbol == '.' && next_symbol == '.') ||
+                            (symbol == '<' && next_symbol == '>') ||
+                            (symbol == '<' && next_symbol == '=') ||
+                            (symbol == '>' && next_symbol == '='))
                         {
-                            symbol_index++;
+                            this->reader->readSymbol();
+                            lexeme.push_back(next_symbol);
                         }
                         lexeme_type = LEXEME_IDENTIFIER;
                         state = STATE_LEXEMES_END;
-                        symbol_index++;
                     }
                 } break;
             //пытаемся разобрать число
             case STATE_INT:
                 {
-                    if (symbol == '.')
+                    lexeme.push_back(symbol);
+                    if (next_symbol == '.')
                         state = STATE_REAL;
-                    else if (!isdigit(symbol)){
+                    else if (!isdigit(next_symbol)){
                         lexeme_type = LEXEME_INT_CONST;
                         state = STATE_LEXEMES_END;
                     }
@@ -120,7 +132,8 @@ comp_error_t LexicalProcessor::getNextToken(AbstactToken** token)
             //пытаемся разобрать вещественное число
             case STATE_REAL:
                 {
-                    if (!isdigit(symbol))
+                    lexeme.push_back(symbol);
+                    if (!isdigit(next_symbol))
                     {
                         lexeme_type = LEXEME_REAL_CONST;
                         state = STATE_LEXEMES_END;
@@ -129,50 +142,41 @@ comp_error_t LexicalProcessor::getNextToken(AbstactToken** token)
             //пытаемся разобрать строковую константу
             case STATE_STRING:
                 {
-                    if (symbol == '\''){
+                    lexeme.push_back(symbol);
+                    if (symbol == '\'')
+                    {
                         lexeme_type = LEXEME_STRING_CONST;
                         state = STATE_LEXEMES_END;
-                        symbol_index++;
                     }
                 } break;
             //пытаемся разобрать идентификатор (ключевое слово или идентификатор пока не известно)
             case STATE_IDENT:
                 {
-                    if (isServiceSymbol(symbol) || isspace(symbol)){
+                    lexeme.push_back(symbol);
+                    if (isServiceSymbol(next_symbol) || isspace(next_symbol))
+                    {
                         lexeme_type = LEXEME_IDENTIFIER;
                         state = STATE_LEXEMES_END;
                     }
                 } break;
             default: break;
         }
-        this->current_column++;
-        symbol_index++;
     }
-    symbol_index--;
-    //переводим лексему в std::string
-    std::string value(lexeme, symbol_index);
     if (!error.code){
-        error = ParseToken(lexeme_type, value, token);
+        error = ParseToken(lexeme_type, start_row, start_column, lexeme, token);
         if (error.code)
         {
-            error.col = this->current_column;
-            error.row = this->current_row;
+            error.col = this->reader->getColumnIndex();
+            error.row = this->reader->getRowIndex();
         }
     }
     //пропускаем пробельные символы
-    while(isspace(lexeme[symbol_index])){
-        if (lexeme[symbol_index] == '\n')
-        {
-            this->current_row++;
-            this->current_column = 1;
-        }
-        symbol_index++;
-    }
-    this->last_token_position += symbol_index;
+    while(isspace(this->reader->peekSymbol()) && this->reader->peekSymbol() != '\n')
+        this->reader->readSymbol();
     return error;
 }
 
-comp_error_t ParseToken(LexemeType type, const std::string& lexeme, AbstactToken** out_token)
+comp_error_t ParseToken(LexemeType type, size_t start_row, size_t start_column, const std::string& lexeme, AbstactToken** out_token)
 {
     AbstactToken* token = nullptr;
     comp_error_t err;
@@ -184,8 +188,8 @@ comp_error_t ParseToken(LexemeType type, const std::string& lexeme, AbstactToken
         {
             PascalKeyword keyword = definePascalKeyword(lexeme);
             if (keyword == KEYWORD_UNKNOWN)
-                token = new Token<std::string>(TOKEN_IDENTIFIER, lexeme);
-            else token = new Token<PascalKeyword>(TOKEN_KEYWORD, keyword);
+                token = new Token<std::string>(TOKEN_IDENTIFIER, start_row, start_column, lexeme);
+            else token = new Token<PascalKeyword>(TOKEN_KEYWORD, start_row, start_column, keyword);
         } break;
     case LEXEME_INT_CONST:
         {
@@ -193,18 +197,20 @@ comp_error_t ParseToken(LexemeType type, const std::string& lexeme, AbstactToken
             try{
                 value = std::stoi(lexeme);
             }
-                catch(const std::out_of_range& e) {
+            catch(...) {
                 err.code = LEX_ERROR_OUT_OF_RANGE;
+                err.row = start_row;
+                err.col = start_column;
                 break;
             }
             Constant<int32_t> *constant = new Constant<int32_t>(CONST_INT, value);
-            token = new Token<Constant<int32_t>*>(TOKEN_CONST, constant);
+            token = new Token<Constant<int32_t>*>(TOKEN_CONST, start_row, start_column, constant);
         } break;
     case LEXEME_REAL_CONST:
         {
             float value = std::stod(lexeme);
             Constant<float> *constant = new Constant<float>(CONST_REAL, value);
-            token = new Token<Constant<float>*>(TOKEN_CONST, constant);
+            token = new Token<Constant<float>*>(TOKEN_CONST, start_row, start_column, constant);
         } break;
     case LEXEME_STRING_CONST:
         {
@@ -212,12 +218,12 @@ comp_error_t ParseToken(LexemeType type, const std::string& lexeme, AbstactToken
             if (value.size() == 1)
             {
                 Constant<char>* constant = new Constant<char>(CONST_CHAR, value[0]);
-                token = new Token<Constant<char>*>(TOKEN_CONST, constant);
+                token = new Token<Constant<char>*>(TOKEN_CONST, start_row, start_column, constant);
             }
             else
             {
                 Constant<std::string>* constant = new Constant<std::string>(CONST_STRING, value);
-                token = new Token<Constant<std::string>*>(TOKEN_CONST, constant);
+                token = new Token<Constant<std::string>*>(TOKEN_CONST, start_row, start_column, constant);
             }
         } break;
     default: {} break;

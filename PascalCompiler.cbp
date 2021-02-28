@@ -5,7 +5,7 @@
 		<Option title="PascalCompiler" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="Stages/;Types/" />
+		<Option virtualFolders="Stages/;Types/;Types/Grammatics/" />
 		<Build>
 			<Target title="Debug">
 				<Option output="bin/Debug/PascalCompiler" prefix_auto="1" extension_auto="1" />
@@ -39,6 +39,8 @@
 		</Linker>
 		<Unit filename="Compiler.cpp" />
 		<Unit filename="Compiler.h" />
+		<Unit filename="FileReader.cpp" />
+		<Unit filename="FileReader.h" />
 		<Unit filename="Stages/LexicalProcessor.cpp">
 			<Option compilerVar="CC" />
 			<Option virtualFolder="Stages/" />
@@ -46,13 +48,16 @@
 		<Unit filename="Stages/LexicalProcessor.h">
 			<Option virtualFolder="Stages/" />
 		</Unit>
-		<Unit filename="Stages/Preprocessor.h">
-			<Option virtualFolder="Stages/" />
+		<Unit filename="Types/AbstractGrammatic.h">
+			<Option virtualFolder="Types/" />
 		</Unit>
 		<Unit filename="Types/Constant.cpp">
 			<Option virtualFolder="Types/" />
 		</Unit>
 		<Unit filename="Types/Constant.h">
+			<Option virtualFolder="Types/" />
+		</Unit>
+		<Unit filename="Types/Error.h">
 			<Option virtualFolder="Types/" />
 		</Unit>
 		<Unit filename="Types/PascalKeywords.h">

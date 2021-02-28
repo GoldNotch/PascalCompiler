@@ -14,32 +14,40 @@ size_t GetFileSize(FILE* f)
     return size;
 }
 
-
+void printError(const comp_error_t* error)
+{
+    const char* explain = NULL;
+    switch(error->code)
+    {
+        case LEX_ERROR_OUT_OF_RANGE: explain = "too long number for variable"; break;
+        case SYN_ERROR_EXPECTED_ASSIGNMENT: explain = "expected \':=\'"; break;
+        case SYN_ERROR_EXPECTED_BEGIN: explain = "expected \'begin\'"; break;
+        case SYN_ERROR_EXPECTED_COLON: explain = "expected \':\'"; break;
+        case SYN_ERROR_EXPECTED_DO: explain = "expected \'do\'"; break;
+        case SYN_ERROR_EXPECTED_DOT: explain = "expected \'n\'"; break;
+        case SYN_ERROR_EXPECTED_END: explain = "expected \'end\'"; break;
+        case SYN_ERROR_EXPECTED_IDENTIFIER: explain = "expected identifier"; break;
+        case SYN_ERROR_EXPECTED_PROGRAM: explain = "expected \'program\'"; break;
+        case SYN_ERROR_EXPECTED_RIGHT_PARENTHESIS: explain = "expected \')\'"; break;
+        case SYN_ERROR_EXPECTED_SEMICOLON: explain = "expected \';\'"; break;
+        case SYN_ERROR_EXPECTED_THEN: explain = "expected \'then\'"; break;
+        case SYN_ERROR_INVALID_OPERATOR: explain = "error in operator"; break;
+        default: explain = "unknown error"; break;
+    }
+    printf("ERROR %i(%i, %i): %s\n", error->code, error->row, error->col, explain);
+}
 
 int main(int argc, char* argv[])
 {
-    FILE* in = fopen("input.txt", "r");
-    if (in){
-        size_t file_size = GetFileSize(in);
-        char* text_program = (char*)malloc(file_size + 1);
-        if (fread(text_program, sizeof(char), file_size, in) == 0)
-        {
-            printf("there's an error");
-            return -1;
-        }
-        text_program[file_size] = '\0';
-
-        void* program;
-        std::vector<comp_error_t> errors = Compile(text_program, program);
-        for(size_t i = 0; i < errors.size(); i++)
-        {
-            printf("ERROR: %i(%i, %i)\n", errors[i].code, errors[i].row, errors[i].col);
-        }
-
-        free(text_program);
-        fclose(in);
+    FileReader reader("input.txt");
+    void* program;
+    Compiler compiler;
+    compiler.bindReader(&reader);
+    std::vector<comp_error_t> errors = compiler.Compile(program);
+    for(size_t i = 0; i < errors.size(); i++)
+    {
+        printError(&errors[i]);
     }
-    else printf("file not found");
     system("pause");
     return 0;
 }

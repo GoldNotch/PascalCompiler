@@ -14,18 +14,28 @@ enum TokenType
 class AbstactToken
 {
 public:
-    AbstactToken(TokenType type){this->Type = type;}
+    AbstactToken(TokenType type, size_t row, size_t column)
+    {
+        this->Type = type;
+        this->row = row;
+        this->column = column;
+    }
     TokenType getType() const {return this->Type;}
+    size_t getRow() const {return row;}
+    size_t getColumn() const {return column;}
     std::string toString() const;
     virtual ~AbstactToken(){}
 protected:
     TokenType Type;
+    //позиция токена в тексте
+    size_t column;
+    size_t row;
 };
 template <class T>
 class Token : public AbstactToken
 {
 public:
-    Token(TokenType type, const T& data);
+    Token(TokenType type, size_t row, size_t column, const T& data);
     virtual ~Token();
     T getData() const;
 protected:
@@ -35,7 +45,7 @@ protected:
 // ------------------------- Implementation ------------------------
 
 template<class T>
-Token<T>::Token(TokenType type, const T& data) : AbstactToken(type)
+Token<T>::Token(TokenType type, size_t row, size_t column, const T& data) : AbstactToken(type, row, column)
 {
     this->data = data;
 }
