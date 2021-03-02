@@ -13,37 +13,38 @@ public:
     void bindReader(FileReader* reader);
     ErrorsArray Compile(void* const program);
 private:
-    comp_error_t readToken();
+    bool readToken();
     AbstactToken* last_token; //только что прочитанный токен
     AbstactToken* next_token; //следующий (еще не прочитанный) токен
     comp_error_t next_error;    //ошибка следующего (еще не прочитанного) токена
     LexicalProcessor lexer;
 
     bool isNextTokenCorrect();
-    comp_error_t createError(ErrorType error_code);
-    void addError(ErrorType error_code, ErrorsArray* errors);
     void SkipTokens(const std::vector<PascalKeyword>& stop_words, bool or_before_ident);
     bool isNextTokenOperator();
     bool isNextTokenCompareOperator();
+    // сбор ошибок
+    std::vector<comp_error_t> errors;
+    void addError(ErrorType error_code);
 
     // Грамматики
-    ErrorsArray compile_Program         ();
-    ErrorsArray compile_Block           ();
-    ErrorsArray compile_VarSection      ();
-    ErrorsArray compile_OperatorSection ();
-    ErrorsArray compile_CompoundOperator();
-    ErrorsArray compile_Operator        ();
-    ErrorsArray compile_IfOperator      ();
-    ErrorsArray compile_WhileOperator   ();
-    //Индивидуальное задание
-    ErrorsArray compile_TypeSection     ();
+    bool compile_Program         ();
+    bool compile_Block           ();
+    bool compile_VarSection      ();
+    bool compile_VarDeclaration  ();
+    bool compile_OperatorSection ();
+    bool compile_CompoundOperator();
+    bool compile_Operator        ();
+    bool compile_IfOperator      ();
+    bool compile_WhileOperator   ();
+    bool compile_Assignment      ();
+    bool compile_Expression      ();
+    bool compile_SimpleExpression();
+    bool compile_Term            ();   //слагаемое
+    bool compile_Multiplier      ();  //множитель
 
-    comp_error_t compile_VarDeclaration ();
-    comp_error_t compile_Assignment     ();
-    comp_error_t compile_Expression     ();
-    comp_error_t compile_SimpleExpression();
-    comp_error_t compile_Term           ();   //слагаемое
-    comp_error_t compile_Multiplier     ();  //множитель
+    //Индивидуальное задание
+    bool compile_TypeSection     ();
 
 
 };

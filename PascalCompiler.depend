@@ -25,7 +25,7 @@
 	"../FileReader.h"
 	<string>
 
-1614500563 d:\homework\compilers\pascalcompiler\compiler.h
+1614603511 d:\homework\compilers\pascalcompiler\compiler.h
 	<cstddef>
 	<vector>
 	"Stages/LexicalProcessor.h"
@@ -52,7 +52,7 @@
 	<map>
 	<string>
 
-1614510452 source:d:\homework\compilers\pascalcompiler\compiler.cpp
+1614603383 source:d:\homework\compilers\pascalcompiler\compiler.cpp
 	<algorithm>
 	"Compiler.h"
 	"Stages/LexicalProcessor.h"
@@ -74,6 +74,6 @@
 	"FileReader.h"
 	<cstdio>
 
-1614163542 d:\homework\compilers\pascalcompiler\types\error.h
+1614600434 d:\homework\compilers\pascalcompiler\types\error.h
 	<vector>
 

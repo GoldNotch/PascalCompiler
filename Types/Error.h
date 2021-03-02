@@ -26,8 +26,3 @@ struct comp_error_t
 };
 
 typedef std::vector<comp_error_t> ErrorsArray;
-
-static void mergeErrorsArrays(ErrorsArray* arr1, const ErrorsArray& arr2)
-{
-    arr1->insert(arr1->end(), arr2.begin(), arr2.end());
-}

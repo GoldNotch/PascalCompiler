@@ -7,12 +7,14 @@ typedef std::vector<PascalKeyword> StopWordsArray;
 Compiler::Compiler()
 {
     this->last_token = nullptr;
+
 }
 
 Compiler::~Compiler()
 {
     if (last_token)
         delete last_token;
+    errors.clear();
     last_token = nullptr;
 }
 
@@ -24,16 +26,22 @@ void Compiler::bindReader(FileReader* reader)
 ErrorsArray Compiler::Compile(void* const program)
 {
     next_error = lexer.getNextToken(&next_token);
-    return this->compile_Program();
+    //очищаем список ошибок
+    errors.clear();
+    this->compile_Program();
+    return errors;
 }
 
-comp_error_t Compiler::readToken()
+bool Compiler::readToken()
 {
-    comp_error_t result;
     if (last_token)
         delete last_token;
-    result = next_error;
     last_token = next_token;
+    bool result = true;
+    if (next_error.code != NO_ERRORS){
+        errors.push_back(next_error);
+        result = false;
+    }
     this->next_error = lexer.getNextToken(&next_token);
     return result;
 }
@@ -43,18 +51,13 @@ bool Compiler::isNextTokenCorrect()
     return this->next_token && this->next_error.code == NO_ERRORS;
 }
 
-comp_error_t Compiler::createError(ErrorType error_code)
+void Compiler::addError(ErrorType error_code)
 {
     comp_error_t err;
     err.code = error_code;
     err.row = next_token->getRow();
     err.col = next_token->getColumn();
-    return err;
-}
-
-void Compiler::addError(ErrorType error_code, ErrorsArray* errors)
-{
-    errors->push_back(createError(error_code));
+    errors.push_back(err);
 }
 
 void Compiler::SkipTokens(const StopWordsArray& stop_words, bool before_ident)
@@ -103,12 +106,12 @@ bool Compiler::isNextTokenCompareOperator()
 
 // ----------------------- Грамматики -----------------------------
 
-ErrorsArray Compiler::compile_Program()
+bool Compiler::compile_Program()
 {
-    ErrorsArray errors;
-    StopWordsArray stop_words = {KEYWORD_VAR, KEYWORD_TYPE,
-                                KEYWORD_FUNCTION, KEYWORD_PROCEDURE,
-                                KEYWORD_BEGIN, KEYWORD_DOT, KEYWORD_EOF};
+    bool compiled = true;
+    StopWordsArray block_begin_words = {KEYWORD_VAR, KEYWORD_TYPE,
+                                        KEYWORD_FUNCTION, KEYWORD_PROCEDURE,
+                                        KEYWORD_BEGIN};
 
     // read program
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
@@ -126,40 +129,47 @@ ErrorsArray Compiler::compile_Program()
                 this->readToken();
             }
             else{
-                addError(SYN_ERROR_EXPECTED_SEMICOLON, &errors);
-                SkipTokens(stop_words, false);
+                addError(SYN_ERROR_EXPECTED_SEMICOLON);
+                SkipTokens(block_begin_words, false);
+                compiled = false;
             }
         }
         else{
-            addError(SYN_ERROR_EXPECTED_IDENTIFIER, &errors);
-            SkipTokens(stop_words, false);
+            addError(SYN_ERROR_EXPECTED_IDENTIFIER);
+            SkipTokens(block_begin_words, false);
+            compiled = false;
         }
     }
     else
     {
-        addError(SYN_ERROR_EXPECTED_PROGRAM, &errors);
-        SkipTokens(stop_words, false);
+        addError(SYN_ERROR_EXPECTED_PROGRAM);
+        SkipTokens(block_begin_words, false);
+        compiled = false;
     }
 
 
-    ErrorsArray block_errors = this->compile_Block();
-    if (block_errors.size() > 0){
-        mergeErrorsArrays(&errors, block_errors);
+    if (!this->compile_Block()){
+        //пропускаем токены до конца программы
         SkipTokens({KEYWORD_DOT, KEYWORD_EOF}, false);
+        compiled = false;
     }
+
     //считываем точку в конце
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_DOT)
     {
         this->readToken();
     }
-    else addError(SYN_ERROR_EXPECTED_DOT, &errors);
-    return errors;
+    else{
+            addError(SYN_ERROR_EXPECTED_DOT);
+            compiled = false;
+    }
+    return compiled;
 }
 
-ErrorsArray Compiler::compile_Block()
+bool Compiler::compile_Block()
 {
-    ErrorsArray errors;
+    bool compiled = true;
     StopWordsArray stop_words = {KEYWORD_VAR, KEYWORD_PROCEDURE, KEYWORD_FUNCTION, KEYWORD_BEGIN};
     /*if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_TYPE)
@@ -174,242 +184,52 @@ ErrorsArray Compiler::compile_Block()
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_VAR)
     {
-        ErrorsArray var_errors = this->compile_VarSection();
-        if (var_errors.size() > 0)
+        if (!this->compile_VarSection())
         {
-            mergeErrorsArrays(&errors, var_errors);
-            SkipTokens(stop_words, false);
+            //пропускаем токены до конца секции переменных - до функции или процедуры или блока операторов
+            SkipTokens({KEYWORD_BEGIN, KEYWORD_PROCEDURE, KEYWORD_FUNCTION}, false);
+            compiled = false;
         }
     }
 
-    //begin ... end.
-    ErrorsArray operators_errors = this->compile_OperatorSection();
-    mergeErrorsArrays(&errors, operators_errors);
-    return errors;
+
+
+    if (!this->compile_OperatorSection())
+    {
+        compiled = false;
+    }
+
+    return compiled;
 }
 
-ErrorsArray Compiler::compile_VarSection()
+bool Compiler::compile_VarSection()
 {
-    ErrorsArray errors;
+    bool compiled = true;
     StopWordsArray stop_words = {KEYWORD_SEMICOLON, KEYWORD_BEGIN, KEYWORD_EOF};
     //прочитали var
     this->readToken();
 
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_IDENTIFIER)
     {
-        while (this->isNextTokenCorrect() && next_token->getType() == TOKEN_IDENTIFIER)
+        while (compiled && this->isNextTokenCorrect() && next_token->getType() == TOKEN_IDENTIFIER)
         {
             //компилируем строку однотипных переменных
-            comp_error_t error = this->compile_VarDeclaration();
-            if (error.code == NO_ERRORS)
-            {
-                if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
-                    ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_SEMICOLON)
-                {
-                    this->readToken();
-                }
-                else addError(SYN_ERROR_EXPECTED_SEMICOLON, &errors);
-            }
-            else{
-                errors.push_back(error);
-                //пропускаем до первого идентификатора или до функции, процедуры или основной программы
-                SkipTokens({KEYWORD_PROCEDURE, KEYWORD_FUNCTION, KEYWORD_BEGIN}, true);
-            }
+            if (!this->compile_VarDeclaration())
+                compiled = false;
         }
-    }
-    else addError(SYN_ERROR_EXPECTED_IDENTIFIER, &errors);
-
-    return errors;
-}
-
-ErrorsArray Compiler::compile_OperatorSection()
-{
-    return this->compile_CompoundOperator();
-}
-
-ErrorsArray Compiler::compile_CompoundOperator()
-{
-    ErrorsArray errors;
-    //пропускаем токены либо до первого оператора, либо до процедуры, функции, либо до конца программы
-    StopWordsArray stop_words = {KEYWORD_END,
-                                KEYWORD_BEGIN, KEYWORD_IF,
-                                KEYWORD_CASE, KEYWORD_WHILE,
-                                KEYWORD_REPEAT, KEYWORD_FOR,
-                                KEYWORD_GOTO, KEYWORD_EOF};
-    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
-        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_BEGIN)
-    {
-        //считали begin
-        this->readToken();
     }
     else
     {
-        addError(SYN_ERROR_EXPECTED_BEGIN, &errors);
-        SkipTokens(stop_words, true);
+        addError(SYN_ERROR_EXPECTED_IDENTIFIER);
+        compiled = false;
     }
 
-    //компилируем операторы
-    while (isNextTokenOperator())
-    {
-        ErrorsArray operator_errors = compile_Operator();
-        if (operator_errors.size() > 0)
-        {
-            mergeErrorsArrays(&errors, operator_errors);
-            SkipTokens({KEYWORD_SEMICOLON}, false);
-            SkipTokens(stop_words, true);
-        }
-        else{
-            if (isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
-                    ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_SEMICOLON)
-            {
-                readToken();
-            }
-            else{
-               addError(SYN_ERROR_EXPECTED_SEMICOLON, &errors);
-               SkipTokens(stop_words, true);
-            }
-        }
-    }
-
-    //проверяем end
-    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
-        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_END)
-    {
-        this->readToken();
-    }
-    else addError(SYN_ERROR_EXPECTED_END, &errors);
-
-    return errors;
+    return compiled;
 }
 
-ErrorsArray Compiler::compile_Operator()
+bool Compiler::compile_VarDeclaration()
 {
-    ErrorsArray errors;
-    if (isNextTokenCorrect())
-    {
-        //если идентификатор(переменная), то присваивание
-        if (next_token->getType() == TOKEN_IDENTIFIER)
-        {
-            comp_error_t err = compile_Assignment();
-            if (err.code != NO_ERRORS)
-                errors.push_back(err);
-        }
-        //если идентификатор(процедура), то вызов процедуры
-        //если ключевое слово то цикл или условие или goto
-        else if (next_token->getType() == TOKEN_KEYWORD)
-        {
-            Token<PascalKeyword>* token = (Token<PascalKeyword>*)next_token;
-            switch(token->getData())
-            {
-                case KEYWORD_BEGIN: errors = compile_CompoundOperator(); break;
-                case KEYWORD_IF: errors = compile_IfOperator(); break;
-                case KEYWORD_FOR: break;
-                case KEYWORD_CASE: break;
-                case KEYWORD_WHILE: errors = compile_WhileOperator(); break;
-                case KEYWORD_REPEAT: break;
-                default:
-                    {
-                        addError(SYN_ERROR_INVALID_OPERATOR, &errors);
-                    } break;
-            }
-        }
-    }
-    return errors;
-}
-
-ErrorsArray Compiler::compile_IfOperator()
-{
-    ErrorsArray errors;
-    StopWordsArray stop_words = {KEYWORD_BEGIN, KEYWORD_END, KEYWORD_IF,
-                                KEYWORD_CASE, KEYWORD_WHILE,
-                                KEYWORD_REPEAT, KEYWORD_FOR,
-                                KEYWORD_GOTO,
-                                KEYWORD_THEN, KEYWORD_ELSE, KEYWORD_SEMICOLON};
-    //read if
-    readToken();
-    comp_error_t err = compile_Expression();
-    if (err.code != NO_ERRORS)
-    {
-        errors.push_back(err);
-        SkipTokens(stop_words, true);
-    }
-
-    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
-        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_THEN)
-    {
-        //считали then
-        this->readToken();
-    }
-    else
-    {
-        addError(SYN_ERROR_EXPECTED_THEN, &errors);
-        SkipTokens(stop_words, true);
-    }
-
-    ErrorsArray operator_errors = compile_Operator();
-    if (operator_errors.size() > 0)
-    {
-        mergeErrorsArrays(&errors, operator_errors);
-        SkipTokens(stop_words, true);
-    }
-
-    //если есть ветка иначе
-    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
-        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_ELSE)
-    {
-        //считали else
-        this->readToken();
-        ErrorsArray operator_errors = compile_Operator();
-        if (operator_errors.size() > 0)
-        {
-            mergeErrorsArrays(&errors, operator_errors);
-            SkipTokens(stop_words, false);
-        }
-    }
-    return errors;
-}
-
-ErrorsArray Compiler::compile_WhileOperator()
-{
-    ErrorsArray errors;
-    StopWordsArray stop_words = {KEYWORD_BEGIN, KEYWORD_END, KEYWORD_IF,
-                                KEYWORD_CASE, KEYWORD_WHILE,
-                                KEYWORD_REPEAT, KEYWORD_FOR,
-                                KEYWORD_GOTO,
-                                KEYWORD_DO};
-    readToken();
-    comp_error_t err = compile_Expression();
-    if (err.code != NO_ERRORS)
-    {
-        errors.push_back(err);
-        SkipTokens(stop_words, false);
-    }
-
-    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
-        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_DO)
-    {
-        //считали do
-        this->readToken();
-    }
-    else
-    {
-        addError(SYN_ERROR_EXPECTED_DO, &errors);
-        SkipTokens(stop_words, true);
-    }
-    ErrorsArray operator_errors = compile_Operator();
-    if (operator_errors.size() > 0)
-    {
-        mergeErrorsArrays(&errors, operator_errors);
-        SkipTokens(stop_words, false);
-    }
-    return errors;
-}
-
-
-comp_error_t Compiler::compile_VarDeclaration()
-{
-    comp_error_t error;
-    error.code = NO_ERRORS;
+    bool compiled = true;
     //прочитали первую переменную
     this->readToken();
     //пока , <переменная>
@@ -423,8 +243,13 @@ comp_error_t Compiler::compile_VarDeclaration()
         {
             this->readToken();
         }
-        else return createError(SYN_ERROR_EXPECTED_IDENTIFIER);
+        else
+        {
+            addError(SYN_ERROR_EXPECTED_IDENTIFIER);
+            compiled = false;
+        }
     }
+
 
     //считываем :
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
@@ -435,16 +260,220 @@ comp_error_t Compiler::compile_VarDeclaration()
         if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_IDENTIFIER)
         {
             this->readToken();
+            //считали ;
+             if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+                    ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_SEMICOLON)
+            {
+                this->readToken();
+            }
+            else{
+                addError(SYN_ERROR_EXPECTED_SEMICOLON);
+                compiled = false;
+            }
         }
-        else return createError(SYN_ERROR_EXPECTED_IDENTIFIER);
+        else
+        {
+            addError(SYN_ERROR_EXPECTED_IDENTIFIER);
+            compiled = false;
+        }
     }
-    else return createError(SYN_ERROR_EXPECTED_COLON);
+    else
+    {
+        addError(SYN_ERROR_EXPECTED_COLON);
+        compiled = false;
+    }
 
-    return error;
+    return compiled;
 }
 
-comp_error_t Compiler::compile_Assignment()
+bool Compiler::compile_OperatorSection()
 {
+    return this->compile_CompoundOperator();
+}
+
+bool Compiler::compile_CompoundOperator()
+{
+    bool compiled = true;
+    //пропускаем токены либо до первого оператора, либо до процедуры, функции, либо до конца программы
+    StopWordsArray stop_words = {KEYWORD_END,
+                                KEYWORD_BEGIN, KEYWORD_IF,
+                                KEYWORD_CASE, KEYWORD_WHILE,
+                                KEYWORD_REPEAT, KEYWORD_FOR,
+                                KEYWORD_GOTO, KEYWORD_EOF};
+
+    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_BEGIN)
+    {
+        //считали begin
+        this->readToken();
+    }
+    else
+    {
+        addError(SYN_ERROR_EXPECTED_BEGIN);
+        compiled = false;
+    }
+
+    //компилируем операторы
+    while (isNextTokenOperator())
+    {
+        if (compile_Operator())
+        {
+            if (isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+                    ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_SEMICOLON)
+            {
+                readToken();
+            }
+            else{
+               addError(SYN_ERROR_EXPECTED_SEMICOLON);
+               compiled = false;
+            }
+        }
+        else
+        {
+            SkipTokens(stop_words, true);
+            compiled = false;
+        }
+    }
+
+    //проверяем end
+    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_END)
+    {
+        this->readToken();
+    }
+    else{
+        addError(SYN_ERROR_EXPECTED_END);
+        compiled = false;
+    }
+
+    return compiled;
+}
+
+bool Compiler::compile_Operator()
+{
+    bool compiled = true;
+    if (isNextTokenCorrect())
+    {
+        //если идентификатор(переменная), то присваивание
+        if (next_token->getType() == TOKEN_IDENTIFIER)
+        {
+            compiled = compile_Assignment();
+        }
+        //если идентификатор(процедура), то вызов процедуры
+        //если ключевое слово то цикл или условие или goto
+        else if (next_token->getType() == TOKEN_KEYWORD)
+        {
+            Token<PascalKeyword>* token = (Token<PascalKeyword>*)next_token;
+            switch(token->getData())
+            {
+                case KEYWORD_BEGIN: compiled = compile_CompoundOperator(); break;
+                case KEYWORD_IF: compiled = compile_IfOperator(); break;
+                case KEYWORD_FOR: break;
+                case KEYWORD_CASE: break;
+                case KEYWORD_WHILE: compiled = compile_WhileOperator(); break;
+                case KEYWORD_REPEAT: break;
+                default:
+                    {
+                        addError(SYN_ERROR_INVALID_OPERATOR);
+                        compiled = false;
+                    } break;
+            }
+        }
+    }
+    return compiled;
+}
+
+bool Compiler::compile_IfOperator()
+{
+    bool compiled = true;
+    StopWordsArray stop_words = {KEYWORD_BEGIN, KEYWORD_END, KEYWORD_IF,
+                                KEYWORD_CASE, KEYWORD_WHILE,
+                                KEYWORD_REPEAT, KEYWORD_FOR,
+                                KEYWORD_GOTO,
+                                KEYWORD_THEN, KEYWORD_ELSE, KEYWORD_SEMICOLON};
+    //read if
+    readToken();
+    if (!compile_Expression())
+    {
+        SkipTokens(stop_words, true);
+        compiled = false;
+    }
+
+    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_THEN)
+    {
+        //считали then
+        this->readToken();
+    }
+    else
+    {
+        addError(SYN_ERROR_EXPECTED_THEN);
+        SkipTokens(stop_words, true);
+        compiled = false;
+    }
+
+    if (!compile_Operator())
+    {
+        SkipTokens(stop_words, true);
+        compiled = false;
+    }
+
+    //если есть ветка иначе
+    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_ELSE)
+    {
+        //считали else
+        this->readToken();
+        if (!compile_Operator())
+        {
+            SkipTokens(stop_words, true);
+            compiled = false;
+        }
+    }
+    return compiled;
+}
+
+bool Compiler::compile_WhileOperator()
+{
+    bool compiled = true;
+    StopWordsArray stop_words = {KEYWORD_BEGIN, KEYWORD_END, KEYWORD_IF,
+                                KEYWORD_CASE, KEYWORD_WHILE,
+                                KEYWORD_REPEAT, KEYWORD_FOR,
+                                KEYWORD_GOTO,
+                                KEYWORD_DO};
+    readToken();
+    if (!compile_Expression())
+    {
+        SkipTokens(stop_words, false);
+        compiled = false;
+    }
+
+    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_DO)
+    {
+        //считали do
+        this->readToken();
+    }
+    else
+    {
+        addError(SYN_ERROR_EXPECTED_DO);
+        SkipTokens(stop_words, true);
+        compiled = false;
+    }
+
+    if (!compile_Operator())
+    {
+        SkipTokens(stop_words, true);
+        compiled = false;
+    }
+    return compiled;
+}
+
+
+
+bool Compiler::compile_Assignment()
+{
+    bool compiled = true;
     //read variable to assign
     readToken();
     //read :=
@@ -452,33 +481,32 @@ comp_error_t Compiler::compile_Assignment()
         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_ASSIGNMENT)
     {
         readToken();
-        return compile_Expression();
     }
-    else return createError(SYN_ERROR_EXPECTED_ASSIGNMENT);
+    else
+    {
+        //Если равно не было, то вставляем ошибку, делаем вид будто равно было и продолжаем парсинг выражения
+        addError(SYN_ERROR_EXPECTED_ASSIGNMENT);
+        compiled = false;
+    }
+
+    compiled = compile_Expression() && compiled;
+    return compiled;
 }
 
-comp_error_t Compiler::compile_Expression()
+bool Compiler::compile_Expression()
 {
-    comp_error_t err = compile_SimpleExpression();
-    if (err.code == NO_ERRORS && isNextTokenCompareOperator())
+    bool compiled = compile_SimpleExpression();
+    if (isNextTokenCompareOperator())
     {
         readToken();
-        err = compile_SimpleExpression();
+        compiled = compile_SimpleExpression() && compiled;
     }
-    return err;
+    return compiled;
 }
 
-comp_error_t Compiler::compile_SimpleExpression()
+bool Compiler::compile_SimpleExpression()
 {
-    comp_error_t error;
-    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
-        (((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_PLUS ||
-         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_MINUS)
-        )
-    {
-        readToken();
-    }
-    error = compile_Term();
+    bool compiled = compile_Term();
     while (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
             (
                 ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_PLUS ||
@@ -488,16 +516,15 @@ comp_error_t Compiler::compile_SimpleExpression()
         )
     {
         readToken();
-        error = compile_Term();
+        compiled = compile_Term() && compiled;
     }
-    return error;
+
+    return compiled;
 }
 
-comp_error_t Compiler::compile_Term()
+bool Compiler::compile_Term()
 {
-    comp_error_t error;
-    error.code = NO_ERRORS;
-    error = compile_Multiplier();
+    bool compiled = compile_Multiplier();
     while(this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
         (((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_ASTERISK ||
          ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_SLASH ||
@@ -507,15 +534,24 @@ comp_error_t Compiler::compile_Term()
         )
     {
         readToken();
-        error = compile_Multiplier();
+        compiled = compile_Multiplier() && compiled;
     }
-    return error;
+    return compiled;
 }
 
-comp_error_t Compiler::compile_Multiplier()
+bool Compiler::compile_Multiplier()
 {
-    comp_error_t error;
-    error.code = NO_ERRORS;
+    bool compiled = true;
+    //знак перед множителем
+    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+        (((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_PLUS ||
+         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_MINUS)
+        )
+    {
+        readToken();
+    }
+
+
     if (isNextTokenCorrect())
     {
         //переменная или функция
@@ -523,25 +559,29 @@ comp_error_t Compiler::compile_Multiplier()
         {
             readToken();
         }
+        //константа
         else if (next_token->getType() == TOKEN_CONST)
         {
             readToken();
         }
+        //открывающая скобка
         else if(next_token->getType() == TOKEN_KEYWORD && ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_LEFT_PARENTHESIS)
         {
             readToken();
-            error = compile_Expression();
+            compiled = compile_Expression();
             if (isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
                 ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_RIGHT_PARENTHESIS)
             {
                 readToken();
             }
             else {
-                error = createError(SYN_ERROR_EXPECTED_RIGHT_PARENTHESIS);
+                addError(SYN_ERROR_EXPECTED_RIGHT_PARENTHESIS);
+                compiled = false;
             }
         }
     }
-    else error = next_error;
-    return error;
+    else compiled = false;
+
+    return compiled;
 }
 
