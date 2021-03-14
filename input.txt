@@ -1,6 +1,11 @@
 program test;
-var a,b,c: Integer;
-d,e:Real;
+type T = record
+	x, y, z: Real;
+	a, b, c: Integer;
+end;
+var a, b, c: Integer;
+d, e: Real;
+x: T;
 
 begin
 a := 10;
@@ -13,6 +18,27 @@ y := 2 * f - 1.5;
 if (a > b) and (b <> c) then
 begin
 	x1 := map + 1.1
+	a := 
+	b := c
+end
+x.x = 0.0;
+while (a > b) do
+begin
+	x := 3;
+	y := x - := 5;
+end
+
+with x do
+	x := 5
+d := 100000000000000000000000;
+
+for i := 0 to 5 do
+begin
 end;
-d := 1000000000000000000000000;
-end.
+
+repeat
+begin
+
+end
+until a < b;
+end

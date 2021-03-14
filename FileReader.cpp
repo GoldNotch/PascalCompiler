@@ -6,6 +6,7 @@ FileReader::FileReader(const char* path) : fin(path)
     this->row_index = 0;
     this->column_index = 0;
     std::getline(fin, row);
+    //пропуск пустых строк
     while(row.empty() && fin.peek() != EOF)
     {
         std::getline(fin, row);

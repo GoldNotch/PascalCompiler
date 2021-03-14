@@ -24,7 +24,7 @@ void printError(const comp_error_t* error)
         case SYN_ERROR_EXPECTED_BEGIN: explain = "expected \'begin\'"; break;
         case SYN_ERROR_EXPECTED_COLON: explain = "expected \':\'"; break;
         case SYN_ERROR_EXPECTED_DO: explain = "expected \'do\'"; break;
-        case SYN_ERROR_EXPECTED_DOT: explain = "expected \'n\'"; break;
+        case SYN_ERROR_EXPECTED_DOT: explain = "expected \'.\'"; break;
         case SYN_ERROR_EXPECTED_END: explain = "expected \'end\'"; break;
         case SYN_ERROR_EXPECTED_IDENTIFIER: explain = "expected identifier"; break;
         case SYN_ERROR_EXPECTED_PROGRAM: explain = "expected \'program\'"; break;
@@ -32,6 +32,9 @@ void printError(const comp_error_t* error)
         case SYN_ERROR_EXPECTED_SEMICOLON: explain = "expected \';\'"; break;
         case SYN_ERROR_EXPECTED_THEN: explain = "expected \'then\'"; break;
         case SYN_ERROR_INVALID_OPERATOR: explain = "error in operator"; break;
+        case SYN_ERROR_EXPECTED_MULTIPLIER: explain = "expected identifier or constant or \'(\'"; break;
+        case SEM_ERROR_UNKNOWN_IDENT: explain = "unknown identifier (variable or function or procedure)"; break;
+        case SEM_ERROR_NOT_ASSIGNABLE_TYPES: explain = "not assignable types"; break;
         default: explain = "unknown error"; break;
     }
     printf("ERROR %i(%i, %i): %s\n", error->code, error->row, error->col, explain);
