@@ -30,7 +30,7 @@ private:
     bool isNextTokenType();     //следующий токен - начало типа данных
     bool isNextTokenCompareOperator();  //следующий токен - оператор сравнения
     bool isNextTokenVariable();         //следующий токен - переменная
-    bool isAssignableTypes(AbstractType* t1, AbstractType* t2); //типа соотносимы
+    bool isAssignableTypes(AbstractType* t1, AbstractType* t2); //типы соотносимы
 
     //сбор и обработка ошибок
     std::vector<comp_error_t> errors;
@@ -52,7 +52,7 @@ private:
     bool compile_Assignment         ();
     bool compile_Expression         ();
     bool compile_SimpleExpression   ();
-    bool compile_Term               ();   //слагаемое
+    bool compile_Term               ();  //слагаемое
     bool compile_Multiplier         ();  //множитель
 
     //Индивидуальное задание

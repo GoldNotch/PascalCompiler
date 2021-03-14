@@ -42,7 +42,7 @@ void printError(const comp_error_t* error)
 
 int main(int argc, char* argv[])
 {
-    FileReader reader("input.txt");
+    FileReader reader("input2.txt");
     void* program;
     Compiler compiler;
     compiler.bindReader(&reader);

@@ -4,7 +4,7 @@
 	<stddef.h>
 	<stdlib.h>
 
-1615731289 source:d:\homework\compilers\pascalcompiler\main.cpp
+1615734892 source:d:\homework\compilers\pascalcompiler\main.cpp
 	<cstdio>
 	<cstddef>
 	<cstdlib>
@@ -25,7 +25,7 @@
 	"../FileReader.h"
 	<string>
 
-1615726470 d:\homework\compilers\pascalcompiler\compiler.h
+1615733374 d:\homework\compilers\pascalcompiler\compiler.h
 	<cstddef>
 	<vector>
 	"Stages/LexicalProcessor.h"
@@ -78,8 +78,11 @@
 1615611228 d:\homework\compilers\pascalcompiler\types\error.h
 	<vector>
 
-1615547149 source:d:\homework\compilers\pascalcompiler\stages\scope.cpp
+1615734586 source:d:\homework\compilers\pascalcompiler\stages\scope.cpp
 	"Scope.h"
+	<algorithm>
+	<cctype>
+	<string>
 
 1615609764 d:\homework\compilers\pascalcompiler\stages\scope.h
 	<map>

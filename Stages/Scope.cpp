@@ -1,4 +1,13 @@
 #include "Scope.h"
+#include <algorithm>
+#include <cctype>
+#include <string>
+
+void to_lower(std::string& data)
+{
+    std::transform(data.begin(), data.end(), data.begin(),
+        [](unsigned char c){ return std::tolower(c); });
+}
 
 Scope::Scope(const Scope* parent)
 {
@@ -37,6 +46,7 @@ AbstractType* Scope::createType(TypeType type)
 
 void Scope::SetTypeName(Identifier id, AbstractType* type)
 {
+    to_lower(id);
     this->named_types[id] = type;
 }
 
@@ -45,6 +55,7 @@ AbstractType* Scope::getTypeById(Identifier id) const
 {
     const Scope* s = this;
     AbstractType* type = nullptr;
+    to_lower(id);
     do
     {
         auto it = s->named_types.find(id);
