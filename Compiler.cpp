@@ -862,10 +862,14 @@ bool Compiler::compile_Record()
 bool Compiler::compile_WithOperator()
 {
     bool compiled = true;
+    //read with
     readToken();
+    std::vector<std::string> records;
     if (isNextTokenCorrect() && next_token->getType() == TOKEN_IDENTIFIER)
     {
         readToken();
+        std::string var_name = ((Token<std::string>*)last_token)->getData();
+        records.push_back(var_name);
     }
     else
     {
@@ -880,6 +884,8 @@ bool Compiler::compile_WithOperator()
         if (isNextTokenCorrect() && next_token->getType() == TOKEN_IDENTIFIER)
         {
             readToken();
+            std::string var_name = ((Token<std::string>*)last_token)->getData();
+            records.push_back(var_name);
         }
         else
         {
@@ -888,16 +894,41 @@ bool Compiler::compile_WithOperator()
         }
     }
 
+
+    std::string label;
     if (isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
             ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_DO)
     {
+        label = "with_" + std::to_string(next_token->getRow()) + std::to_string(next_token->getColumn());
+        //запоминаем позицию токена
+        lexer.SaveTokenPosition(label);
         readToken();
     }
     else {
         addError(SYN_ERROR_EXPECTED_DO);
         compiled = false;
     }
-    compiled = this->compile_Operator() && compiled;
+
+    for(size_t i = 0; i < records.size(); i++)
+    {
+        std::string& var_name = records[i];
+        Scope *parent = global_scope;
+        RecordType* record = (RecordType*)global_scope->getDataById(var_name)->getType();
+        global_scope = (Scope*)record->getScope();
+        printf("%s\n", next_token->toString().c_str());
+        //компилируем оператор с новой областью видимости
+        compiled = this->compile_Operator() && compiled;
+        global_scope = parent;
+        if (records.size() > 1 && i < records.size() - 1)
+        {
+            //возвращаемся к началу оператора
+            lexer.RollbackToToken(label);
+            this->readToken();
+        }
+    }
+
+    //удаляем сохраненную метку токена
+    lexer.PopSavedTokenPosition(label);
     return compiled;
 }
 

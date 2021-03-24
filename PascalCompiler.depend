@@ -4,13 +4,13 @@
 	<stddef.h>
 	<stdlib.h>
 
-1615734892 source:d:\homework\compilers\pascalcompiler\main.cpp
+1616518186 source:d:\homework\compilers\pascalcompiler\main.cpp
 	<cstdio>
 	<cstddef>
 	<cstdlib>
 	"Compiler.h"
 
-1615539988 source:d:\homework\compilers\pascalcompiler\stages\lexicalprocessor.cpp
+1616517964 source:d:\homework\compilers\pascalcompiler\stages\lexicalprocessor.cpp
 	<cstdlib>
 	<cctype>
 	<algorithm>
@@ -18,14 +18,15 @@
 	"../Types/PascalKeywords.h"
 	<stdio.h>
 
-1613275761 d:\homework\compilers\pascalcompiler\stages\lexicalprocessor.h
+1616517738 d:\homework\compilers\pascalcompiler\stages\lexicalprocessor.h
 	<cstddef>
 	"../Types/Error.h"
 	"../Types/Token.h"
 	"../FileReader.h"
+	<map>
 	<string>
 
-1615733374 d:\homework\compilers\pascalcompiler\compiler.h
+1616422666 d:\homework\compilers\pascalcompiler\compiler.h
 	<cstddef>
 	<vector>
 	"Stages/LexicalProcessor.h"
@@ -53,7 +54,7 @@
 	<map>
 	<string>
 
-1615730354 source:d:\homework\compilers\pascalcompiler\compiler.cpp
+1616515372 source:d:\homework\compilers\pascalcompiler\compiler.cpp
 	<algorithm>
 	"Compiler.h"
 	"Stages/LexicalProcessor.h"
@@ -67,18 +68,19 @@
 	<sstream>
 	"PascalKeywords.h"
 
-1613271614 d:\homework\compilers\pascalcompiler\filereader.h
+1616517918 d:\homework\compilers\pascalcompiler\filereader.h
 	<fstream>
 	<string>
+	<map>
 
-1615540036 source:d:\homework\compilers\pascalcompiler\filereader.cpp
+1616518096 source:d:\homework\compilers\pascalcompiler\filereader.cpp
 	"FileReader.h"
 	<cstdio>
 
 1615611228 d:\homework\compilers\pascalcompiler\types\error.h
 	<vector>
 
-1615734586 source:d:\homework\compilers\pascalcompiler\stages\scope.cpp
+1616520194 source:d:\homework\compilers\pascalcompiler\stages\scope.cpp
 	"Scope.h"
 	<algorithm>
 	<cctype>

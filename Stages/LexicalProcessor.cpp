@@ -232,3 +232,18 @@ comp_error_t ParseToken(LexemeType type, size_t start_row, size_t start_column, 
         *out_token = token;
     return err;
 }
+
+void LexicalProcessor::SaveTokenPosition(const std::string& reference)
+{
+    positions[reference] = reader->getPosition();
+}
+
+void LexicalProcessor::RollbackToToken(const std::string& reference)
+{
+    reader->rollback(positions[reference]);
+}
+
+void LexicalProcessor::PopSavedTokenPosition(const std::string& reference)
+{
+    positions.erase(reference);
+}

@@ -56,8 +56,7 @@ AbstractType* Scope::getTypeById(Identifier id) const
     const Scope* s = this;
     AbstractType* type = nullptr;
     to_lower(id);
-    do
-    {
+    do    {
         auto it = s->named_types.find(id);
         type = it == s->named_types.end() ? nullptr : it->second;
         s = s->parent;

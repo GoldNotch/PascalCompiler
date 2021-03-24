@@ -1,31 +1,17 @@
 program test;
-type T = record
+type T1 = record
 	x,y,z: Real;
 end;
-var a,b,c: Integer;
+T2 = record
 	x,y: Real;
-	t: T;
+end;
+var t1: T1;
+	t2: T2;
 
 begin
-	a := 5;
-	b := -10.01;
-	c := +0;
-	x := 3;
-	t.x := x;
-	t.y := y;
-	t.z := 0.0;
-	for a := 1 to 5 do
+	with t1, t2 do
 	begin
-		b := b + 1;
+		x := 3
+		z := 5;
 	end;
-	with t do
-		x := 3;
-	if (a > b) then
-	begin
-		a := 0;
-	end
-	else
-	begin
-		b := 0;
-	end;	
 end.
