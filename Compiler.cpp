@@ -22,6 +22,26 @@ static StopWordsArray BlockBeginWords = {KEYWORD_VAR, KEYWORD_TYPE,
                                         KEYWORD_BEGIN};
 static StopWordsArray ProgramEndWords = {KEYWORD_DOT, KEYWORD_EOF};
 
+static std::map<PascalKeyword, int> operation_weight =    {
+                                                            {KEYWORD_ASTERISK, 3},
+                                                            {KEYWORD_SLASH, 3},
+                                                            {KEYWORD_PLUS, 2},
+                                                            {KEYWORD_MINUS, 2},
+                                                            {KEYWORD_LEFT_PARENTHESIS, 0},
+                                                            {KEYWORD_DIV, 3},
+                                                            {KEYWORD_MOD, 3},
+                                                            {KEYWORD_AND, 3},
+                                                            {KEYWORD_OR, 2},
+                                                            {KEYWORD_NOT, 4},
+                                                            {KEYWORD_EQUAL, 1},
+                                                            {KEYWORD_NON_EQUAL, 1},
+                                                            {KEYWORD_LESS_THAN_OR_EQUAL, 1},
+                                                            {KEYWORD_GREATER_THAN_OR_EQUAL, 1},
+                                                            {KEYWORD_LESS_THAN, 1},
+                                                            {KEYWORD_GREATER_THAN, 1},
+                                                            {KEYWORD_IN, 1}
+                                                        };
+
 Compiler::Compiler()
 {
     this->last_token = nullptr;
@@ -41,17 +61,30 @@ void Compiler::bindReader(FileReader* reader)
     lexer.bindReader(reader);
 }
 
-ErrorsArray Compiler::Compile(void* const program)
+ErrorsArray Compiler::Compile(const char* result_path)
 {
     next_error = lexer.getNextToken(&next_token);
     //очищаем список ошибок
+    generator = new CodeGenerator(result_path);
     errors.clear();
     global_scope = new Scope();
-    global_scope->SetTypeName("Integer", global_scope->createType(TYPE_SCALAR));
+    global_scope->SetTypeName("Integer", global_scope->createType(TYPE_SCALAR_4B));
     global_scope->SetTypeName("Real", global_scope->createType(TYPE_REAL));
+    auto boolean = global_scope->createType(TYPE_SCALAR_1B);
+    global_scope->SetTypeName("Boolean", boolean);
+    auto character = global_scope->createType(TYPE_SCALAR_1B);
+    global_scope->SetTypeName("Char", character);
+    global_scope->addVariable("True", boolean, true)->setValue(1);
+    global_scope->addVariable("False", boolean, true)->setValue(0);
+    auto function = global_scope->createType(TYPE_FUNCTION);
+    //у input значение = 1, у output значение = 0
+    global_scope->addVariable("readln", function, true)->setValue(1);
+    global_scope->addVariable("writeln", function, true)->setValue(0);
+    generator->generateScope(global_scope);
     //заполнить область видимости стандартными типами и константами
     this->compile_Program();
     delete global_scope;
+    delete generator;
     return errors;
 }
 
@@ -155,8 +188,8 @@ bool Compiler::isAssignableTypes(AbstractType* t1, AbstractType* t2)
 {
     return t1 != nullptr && t2 != nullptr &&
             (t1->getType() == t2->getType() ||
-            (t1->getType() == TYPE_SCALAR && t2->getType() == TYPE_REAL) ||
-            (t1->getType() == TYPE_REAL && t2->getType() == TYPE_SCALAR));
+            (t1->getType() == TYPE_SCALAR_4B && t2->getType() == TYPE_REAL) ||
+            (t1->getType() == TYPE_REAL && t2->getType() == TYPE_SCALAR_4B));
 }
 
 // ----------------------- √рамматики -----------------------------
@@ -235,8 +268,6 @@ bool Compiler::compile_Block()
         }
     }
 
-
-
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_VAR)
     {
@@ -248,6 +279,7 @@ bool Compiler::compile_Block()
         }
     }
 
+    generator->generateScope(global_scope);
     //global_scope->print();
 
     if (!this->compile_OperatorSection())
@@ -468,7 +500,12 @@ bool Compiler::compile_Operator()
         //если идентификатор(переменна€), то присваивание
         if (next_token->getType() == TOKEN_IDENTIFIER)
         {
-            compiled = compile_Assignment();
+            std::string var_name = ((Token<std::string>*)next_token)->getData();
+            Data* var = global_scope->getDataById(var_name);
+            if (var->getType()->getType() == TYPE_FUNCTION)
+                compiled = compile_FunctionCall();
+            else
+                compiled = compile_Assignment();
         }
         //если идентификатор(процедура), то вызов процедуры
         //если ключевое слово то цикл или условие или goto
@@ -503,6 +540,10 @@ bool Compiler::compile_Operator()
 bool Compiler::compile_IfOperator()
 {
     bool compiled = true;
+    std::string continue_label = "continue";
+    std::string check_condition_label = "check_cond";
+    generator->ReserveLabel(continue_label);
+    generator->ReserveLabel(check_condition_label);
     //read if
     readToken();
     if (!compile_Expression())
@@ -510,6 +551,8 @@ bool Compiler::compile_IfOperator()
         SkipTokens({KEYWORD_THEN, KEYWORD_EOF}, false, false);
         compiled = false;
     }
+    generator->Jump(check_condition_label);
+    int then_label = generator->createLabel();
 
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_THEN)
@@ -531,19 +574,26 @@ bool Compiler::compile_IfOperator()
         SkipTokens(stop_words, false, false);
         compiled = false;
     }
+    generator->Jump(continue_label);
 
     //если есть ветка иначе
+    int else_label = 0;
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_ELSE)
     {
         //считали else
         this->readToken();
+        else_label = generator->createLabel();
         if (!compile_Operator())
         {
             SkipTokens(OperatorEndWords, false, false);
             compiled = false;
         }
+        generator->Jump(continue_label);
     }
+    generator->createLabel(check_condition_label);
+    generator->JumpWithCondition(then_label, else_label);
+    generator->createLabel(continue_label);
     return compiled;
 }
 
@@ -551,11 +601,18 @@ bool Compiler::compile_WhileOperator()
 {
     bool compiled = true;
     readToken();
+    std::string begin_label = "begin_loop";
+    std::string check_condition_label = "check_cond";
+    generator->ReserveLabel(begin_label);
+    generator->ReserveLabel(check_condition_label);
+    generator->createLabel(begin_label);
+
     if (!compile_Expression())
     {
         SkipTokens({KEYWORD_DO}, false, false);
         compiled = false;
     }
+    generator->Jump(check_condition_label);
 
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
         ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_DO)
@@ -568,12 +625,17 @@ bool Compiler::compile_WhileOperator()
         addError(SYN_ERROR_EXPECTED_DO);
         compiled = false;
     }
-
+    int do_label = generator->createLabel();
     if (!compile_Operator())
     {
         SkipTokens(OperatorEndWords, false, false);
         compiled = false;
     }
+    generator->Jump(begin_label);
+
+    generator->createLabel(check_condition_label);
+    generator->JumpWithCondition(do_label, 0);
+
     return compiled;
 }
 
@@ -606,14 +668,72 @@ bool Compiler::compile_Variable()
     return compiled;
 }
 
+bool Compiler::compile_FunctionCall()
+{
+    bool compiled = true;
+    compiled = compile_Variable();
+    bool is_input = last_compiled_variable->getValue();
+    //read (
+    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_LEFT_PARENTHESIS)
+    {
+        readToken();
+    }
+    else
+    {
+        //≈сли равно не было, то вставл€ем ошибку, делаем вид будто равно было и продолжаем парсинг выражени€
+        addError(SYN_ERROR_EXPECTED_LEFT_PARENTHESIS);
+        compiled = false;
+    }
+
+    std::vector<Data*> variables;
+    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_IDENTIFIER)
+    {
+        compiled = compile_Variable() && compiled;
+        variables.push_back(last_compiled_variable);
+    }
+    while(this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+          ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_COMMA)
+    {
+        readToken();
+        compiled = compile_Variable() && compiled;
+        variables.push_back(last_compiled_variable);
+    }
+
+    //read (
+    if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
+        ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_RIGHT_PARENTHESIS)
+    {
+        readToken();
+    }
+    else
+    {
+        //≈сли равно не было, то вставл€ем ошибку, делаем вид будто равно было и продолжаем парсинг выражени€
+        addError(SYN_ERROR_EXPECTED_RIGHT_PARENTHESIS);
+        compiled = false;
+    }
+
+    if (compiled)
+    {
+        if (is_input)
+            generator->InputIntVariables(variables);
+        else
+            generator->OutputIntVariables(variables);
+    }
+
+    return compiled;
+}
+
 bool Compiler::compile_Assignment()
 {
     bool compiled = true;
     AbstractType* first_type = nullptr;
+    std::string variable_to_assign;
     if (isNextTokenVariable())
     {
          compiled = compile_Variable();
          first_type = last_compiled_variable->getType();
+         variable_to_assign = last_compiled_variable->getName();
     }
     else
     {
@@ -647,18 +767,35 @@ bool Compiler::compile_Assignment()
         addError(SEM_ERROR_NOT_ASSIGNABLE_TYPES);
         compiled = false;
     }
+    if (compiled)
+        generator->SaveToVariable(variable_to_assign);
     return compiled;
 }
 
 bool Compiler::compile_Expression()
 {
     bool compiled = true;
+
     compiled = compile_SimpleExpression();
     if (isNextTokenCompareOperator())
     {
         readToken();
+        PascalKeyword operation = ((Token<PascalKeyword>*)last_token)->getData();
+        while(!opstack.empty() && operation_weight[operation] <= operation_weight[opstack.top()])
+        {
+            if (compiled)
+                generator->ExecuteBinaryOperation(opstack.top());
+            opstack.pop();
+        }
+        opstack.push(operation);
         compiled = compile_SimpleExpression() && compiled;
         last_compiled_type = global_scope->getTypeById("boolean");
+    }
+    while(!opstack.empty() && opstack.top() != KEYWORD_LEFT_PARENTHESIS)
+    {
+        if (compiled)
+            generator->ExecuteBinaryOperation(opstack.top());
+        opstack.pop();
     }
     return compiled;
 }
@@ -677,6 +814,15 @@ bool Compiler::compile_SimpleExpression()
         )
     {
         readToken();
+        PascalKeyword operation = ((Token<PascalKeyword>*)last_token)->getData();
+        while(!opstack.empty() && operation_weight[operation] <= operation_weight[opstack.top()])
+        {
+            if (compiled)
+            generator->ExecuteBinaryOperation(opstack.top());
+            opstack.pop();
+        }
+        opstack.push(operation);
+
         compiled = compile_Term() && compiled;
         if (compiled && !isAssignableTypes(last_compiled_type, first_type))
         {
@@ -703,6 +849,15 @@ bool Compiler::compile_Term()
         )
     {
         readToken();
+        PascalKeyword operation = ((Token<PascalKeyword>*)last_token)->getData();
+        while(!opstack.empty() && operation_weight[operation] <= operation_weight[opstack.top()])
+        {
+            if (compiled)
+                generator->ExecuteBinaryOperation(opstack.top());
+            opstack.pop();
+        }
+        opstack.push(operation);
+
         compiled = compile_Multiplier() && compiled;
         if (compiled && !isAssignableTypes(last_compiled_type, first_type))
         {
@@ -717,6 +872,7 @@ bool Compiler::compile_Term()
 bool Compiler::compile_Multiplier()
 {
     bool compiled = true;
+    bool is_negate = false;
     //знак перед множителем
     if (this->isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
         (((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_PLUS ||
@@ -724,6 +880,8 @@ bool Compiler::compile_Multiplier()
         )
     {
         readToken();
+        if (((Token<PascalKeyword>*)last_token)->getData() == KEYWORD_MINUS)
+            is_negate = true;
     }
 
     if (isNextTokenCorrect())
@@ -734,6 +892,8 @@ bool Compiler::compile_Multiplier()
             if (isNextTokenVariable()){
                 compiled = compile_Variable() && compiled;
                 last_compiled_type = last_compiled_variable->getType();
+                if (compiled)
+                    generator->pushVariable(last_compiled_variable->getName(), is_negate);
                 last_compiled_variable = nullptr;
             }
             else
@@ -749,7 +909,14 @@ bool Compiler::compile_Multiplier()
             AbstactConstant* c = ((Token<AbstactConstant*>*)last_token)->getData();
             switch(c->getType())
             {
-                case CONST_INT: last_compiled_type = global_scope->getTypeById("integer"); break;
+                case CONST_INT:
+                    {
+                        last_compiled_type = global_scope->getTypeById("integer");
+                        if (is_negate)
+                            generator->pushValue(-((Constant<int>*)c)->getValue());
+                        else
+                            generator->pushValue(((Constant<int>*)c)->getValue());
+                    }  break;
                 case CONST_REAL: last_compiled_type = global_scope->getTypeById("real"); break;
                 case CONST_CHAR: last_compiled_type = global_scope->getTypeById("char"); break;
                 default: last_compiled_type = nullptr; break;
@@ -758,12 +925,19 @@ bool Compiler::compile_Multiplier()
         //открывающа€ скобка
         else if(next_token->getType() == TOKEN_KEYWORD && ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_LEFT_PARENTHESIS)
         {
+            opstack.push(KEYWORD_LEFT_PARENTHESIS);
             readToken();
             compiled = compile_Expression();
             if (isNextTokenCorrect() && next_token->getType() == TOKEN_KEYWORD &&
                 ((Token<PascalKeyword>*)next_token)->getData() == KEYWORD_RIGHT_PARENTHESIS)
             {
                 readToken();
+                while(opstack.top() != KEYWORD_LEFT_PARENTHESIS)
+                {
+                    generator->ExecuteBinaryOperation(opstack.top());
+                    opstack.pop();
+                }
+                opstack.pop();
             }
             else {
                 addError(SYN_ERROR_EXPECTED_RIGHT_PARENTHESIS);

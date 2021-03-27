@@ -20,10 +20,11 @@ public:
     //найти тип по идентификатору. return null if no type
     AbstractType* getTypeById(Identifier id) const;
     //добавить переменную определенного типа
-    void addVariable(Identifier id, AbstractType* type, bool is_const);
+    Data* addVariable(Identifier id, AbstractType* type, bool is_const);
     //найти данные по идентификатору
     Data* getDataById(Identifier id) const;
-
+    std::vector<Identifier> getVariables() const;
+    int getHeight() const;
     void print();
 
 private:
@@ -35,6 +36,7 @@ private:
     std::map<Identifier, AbstractType*> named_types;
     //переменные
     std::map<Identifier, Data*> variables;
+    int height; //глубина стека
 };
 
 class RecordType : public AbstractType

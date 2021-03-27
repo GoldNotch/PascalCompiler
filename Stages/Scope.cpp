@@ -12,6 +12,7 @@ void to_lower(std::string& data)
 Scope::Scope(const Scope* parent)
 {
     this->parent = parent;
+    height = parent ? parent->height + 1 : 0;
 }
 
 Scope::~Scope()
@@ -35,9 +36,11 @@ AbstractType* Scope::createType(TypeType type)
     AbstractType* new_type = nullptr;
     switch(type)
     {
-        case TYPE_SCALAR: new_type = new ScalarType(); break;
+        case TYPE_SCALAR_4B: new_type = new Scalar4BType(); break;
+        case TYPE_SCALAR_1B: new_type = new Scalar1BType(); break;
         case TYPE_REAL: new_type = new RealType(); break;
         case TYPE_RECORD: new_type = new RecordType(this); break;
+        case TYPE_FUNCTION: new_type = new FunctionType(); break;
         default: break;
     }
     types.push_back(new_type);
@@ -65,10 +68,11 @@ AbstractType* Scope::getTypeById(Identifier id) const
     return type;
 }
 
-void Scope::addVariable(Identifier id, AbstractType* type, bool is_const)
+Data* Scope::addVariable(Identifier id, AbstractType* type, bool is_const)
 {
-    Data* new_data = new Data(type, is_const);
+    Data* new_data = new Data(id + "_" + std::to_string(height), type, is_const);
     this->variables[id] = new_data;
+    return new_data;
 }
 
 Data* Scope::getDataById(Identifier id) const
@@ -85,6 +89,18 @@ Data* Scope::getDataById(Identifier id) const
     return data;
 }
 
+std::vector<Identifier> Scope::getVariables() const
+{
+    std::vector<Identifier> result;
+    for(auto it = variables.begin(); it != variables.end(); it++)
+        result.push_back(it->first);
+    return result;
+}
+
+int Scope::getHeight() const
+{
+    return height;
+}
 
 void  Scope::print()
 {

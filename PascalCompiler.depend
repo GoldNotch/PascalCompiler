@@ -4,7 +4,7 @@
 	<stddef.h>
 	<stdlib.h>
 
-1616518186 source:d:\homework\compilers\pascalcompiler\main.cpp
+1616689318 source:d:\homework\compilers\pascalcompiler\main.cpp
 	<cstdio>
 	<cstddef>
 	<cstdlib>
@@ -26,13 +26,15 @@
 	<map>
 	<string>
 
-1616422666 d:\homework\compilers\pascalcompiler\compiler.h
+1616731593 d:\homework\compilers\pascalcompiler\compiler.h
 	<cstddef>
 	<vector>
 	"Stages/LexicalProcessor.h"
 	"Types/Token.h"
 	"Types/PascalKeywords.h"
 	"Stages/Scope.h"
+	"Stages/CodeGenerator.h"
+	<stack>
 
 1611824986 d:\homework\compilers\pascalcompiler\token.h
 	<cstddef>
@@ -54,7 +56,7 @@
 	<map>
 	<string>
 
-1616515372 source:d:\homework\compilers\pascalcompiler\compiler.cpp
+1616834805 source:d:\homework\compilers\pascalcompiler\compiler.cpp
 	<algorithm>
 	"Compiler.h"
 	"Stages/LexicalProcessor.h"
@@ -77,27 +79,36 @@
 	"FileReader.h"
 	<cstdio>
 
-1615611228 d:\homework\compilers\pascalcompiler\types\error.h
+1616731696 d:\homework\compilers\pascalcompiler\types\error.h
 	<vector>
 
-1616520194 source:d:\homework\compilers\pascalcompiler\stages\scope.cpp
+1616732046 source:d:\homework\compilers\pascalcompiler\stages\scope.cpp
 	"Scope.h"
 	<algorithm>
 	<cctype>
 	<string>
 
-1615609764 d:\homework\compilers\pascalcompiler\stages\scope.h
+1616650251 d:\homework\compilers\pascalcompiler\stages\scope.h
 	<map>
 	<string>
 	<vector>
 	"../Types/Data.h"
 	"../Types/Type.h"
 
-1615377285 d:\homework\compilers\pascalcompiler\types\data.h
+1616664810 d:\homework\compilers\pascalcompiler\types\data.h
 	"Type.h"
 
-1615373449 d:\homework\compilers\pascalcompiler\types\type.h
+1616732002 d:\homework\compilers\pascalcompiler\types\type.h
 	<map>
 	<string>
-	"../Stages/Scope.h"
+
+1616836949 source:d:\homework\compilers\pascalcompiler\stages\codegenerator.cpp
+	"CodeGenerator.h"
+	<cstdio>
+
+1616833339 d:\homework\compilers\pascalcompiler\stages\codegenerator.h
+	"../Types/Data.h"
+	"Scope.h"
+	<sstream>
+	"../Types/PascalKeywords.h"
 

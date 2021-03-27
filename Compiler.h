@@ -5,6 +5,8 @@
 #include "Types/Token.h"
 #include "Types/PascalKeywords.h"
 #include "Stages/Scope.h"
+#include "Stages/CodeGenerator.h"
+#include <stack>
 
 class Compiler
 {
@@ -12,7 +14,7 @@ public:
     Compiler();
     ~Compiler();
     void bindReader(FileReader* reader);
-    ErrorsArray Compile(void* const program);
+    ErrorsArray Compile(const char* path);
 private:
     bool readToken();
     AbstactToken* last_token;           //только что прочитанный токен
@@ -22,6 +24,9 @@ private:
     Scope *global_scope;                //глобальная область видимости
     AbstractType* last_compiled_type;   //последний скомпилированный тип
     Data* last_compiled_variable;       //последняя скомпилированная переменная
+    CodeGenerator* generator;
+    std::stack<PascalKeyword> opstack;
+
 
     //условия токенов
     bool isNextTokenCorrect();  //следующий токен - корректный/правильный
@@ -49,6 +54,7 @@ private:
     bool compile_IfOperator         ();
     bool compile_WhileOperator      ();
     bool compile_Variable           ();
+    bool compile_FunctionCall       ();
     bool compile_Assignment         ();
     bool compile_Expression         ();
     bool compile_SimpleExpression   ();

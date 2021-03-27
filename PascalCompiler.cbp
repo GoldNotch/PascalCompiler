@@ -41,6 +41,12 @@
 		<Unit filename="Compiler.h" />
 		<Unit filename="FileReader.cpp" />
 		<Unit filename="FileReader.h" />
+		<Unit filename="Stages/CodeGenerator.cpp">
+			<Option virtualFolder="Stages/" />
+		</Unit>
+		<Unit filename="Stages/CodeGenerator.h">
+			<Option virtualFolder="Stages/" />
+		</Unit>
 		<Unit filename="Stages/LexicalProcessor.cpp">
 			<Option compilerVar="CC" />
 			<Option virtualFolder="Stages/" />

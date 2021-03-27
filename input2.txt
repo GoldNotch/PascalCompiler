@@ -7,11 +7,16 @@ T2 = record
 end;
 var t1: T1;
 	t2: T2;
+a,b,c: Integer;
+d: Boolean;
 
 begin
 	with t1, t2 do
 	begin
-		x := 3
+		x := 3 + 6
 		z := 5;
 	end;
+
+	d := True or False;
+	d := a = b;
 end.

@@ -42,11 +42,10 @@ void printError(const comp_error_t* error)
 
 int main(int argc, char* argv[])
 {
-    FileReader reader("input2.txt");
-    void* program;
+    FileReader reader("input3.txt");
     Compiler compiler;
     compiler.bindReader(&reader);
-    std::vector<comp_error_t> errors = compiler.Compile(program);
+    std::vector<comp_error_t> errors = compiler.Compile("result.asm");
     for(size_t i = 0; i < errors.size(); i++)
     {
         printError(&errors[i]);

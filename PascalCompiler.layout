@@ -2,133 +2,6 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Debug" />
-	<File name="FileReader.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="781" topLine="7" />
-		</Cursor>
-	</File>
-	<File name="Types\PascalKeywords.h" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="664" topLine="3" />
-		</Cursor>
-	</File>
-	<File name="Types\Error.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1060" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="Types\Data.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="338" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="Types\Constant.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="41" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="Stages\Scope.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1151" topLine="34" />
-		</Cursor>
-		<Folding>
-			<Collapse line="33" />
-			<Collapse line="68" />
-			<Collapse line="74" />
-			<Collapse line="89" />
-		</Folding>
-	</File>
-	<File name="Compiler.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2925" topLine="40" />
-		</Cursor>
-		<Folding>
-			<Collapse line="25" />
-			<Collapse line="31" />
-			<Collapse line="39" />
-			<Collapse line="44" />
-			<Collapse line="58" />
-			<Collapse line="72" />
-			<Collapse line="77" />
-			<Collapse line="102" />
-			<Collapse line="114" />
-			<Collapse line="130" />
-			<Collapse line="144" />
-			<Collapse line="154" />
-			<Collapse line="164" />
-			<Collapse line="221" />
-			<Collapse line="263" />
-			<Collapse line="288" />
-			<Collapse line="362" />
-			<Collapse line="404" />
-			<Collapse line="418" />
-			<Collapse line="463" />
-			<Collapse line="503" />
-			<Collapse line="550" />
-			<Collapse line="580" />
-			<Collapse line="609" />
-			<Collapse line="653" />
-			<Collapse line="666" />
-			<Collapse line="692" />
-			<Collapse line="717" />
-			<Collapse line="789" />
-			<Collapse line="811" />
-			<Collapse line="832" />
-			<Collapse line="862" />
-			<Collapse line="935" />
-			<Collapse line="997" />
-		</Folding>
-	</File>
-	<File name="Types\Constant.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="127" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="Stages\LexicalProcessor.h" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="159" topLine="1" />
-		</Cursor>
-	</File>
-	<File name="FileReader.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1646" topLine="44" />
-		</Cursor>
-		<Folding>
-			<Collapse line="59" />
-		</Folding>
-	</File>
-	<File name="Types\Token.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="374" topLine="12" />
-		</Cursor>
-	</File>
-	<File name="Stages\Scope.h" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1453" topLine="21" />
-		</Cursor>
-	</File>
-	<File name="Types\Token.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="590" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="Types\Type.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="514" topLine="0" />
-		</Cursor>
-		<Folding>
-			<Collapse line="30" />
-		</Folding>
-	</File>
-	<File name="main.cpp" open="1" top="1" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1990" topLine="0" />
-		</Cursor>
-		<Folding>
-			<Collapse line="7" />
-			<Collapse line="17" />
-		</Folding>
-	</File>
 	<File name="Stages\LexicalProcessor.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="-1" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="9629" topLine="138" />
@@ -144,9 +17,151 @@
 			<Collapse line="246" />
 		</Folding>
 	</File>
-	<File name="Compiler.h" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Stages\Scope.h" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1105" topLine="8" />
+			<Cursor1 position="930" topLine="9" />
+		</Cursor>
+	</File>
+	<File name="Stages\CodeGenerator.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="580" topLine="9" />
+		</Cursor>
+	</File>
+	<File name="Types\PascalKeywords.h" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="664" topLine="102" />
+		</Cursor>
+	</File>
+	<File name="Compiler.cpp" open="1" top="1" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="27914" topLine="126" />
+		</Cursor>
+		<Folding>
+			<Collapse line="51" />
+			<Collapse line="59" />
+			<Collapse line="64" />
+			<Collapse line="91" />
+			<Collapse line="105" />
+			<Collapse line="110" />
+			<Collapse line="119" />
+			<Collapse line="135" />
+			<Collapse line="147" />
+			<Collapse line="163" />
+			<Collapse line="177" />
+			<Collapse line="187" />
+			<Collapse line="197" />
+			<Collapse line="254" />
+			<Collapse line="295" />
+			<Collapse line="320" />
+			<Collapse line="394" />
+			<Collapse line="436" />
+			<Collapse line="450" />
+			<Collapse line="495" />
+			<Collapse line="540" />
+			<Collapse line="600" />
+			<Collapse line="642" />
+			<Collapse line="671" />
+			<Collapse line="727" />
+			<Collapse line="775" />
+			<Collapse line="803" />
+			<Collapse line="838" />
+			<Collapse line="872" />
+			<Collapse line="963" />
+			<Collapse line="985" />
+			<Collapse line="1006" />
+			<Collapse line="1036" />
+			<Collapse line="1109" />
+			<Collapse line="1171" />
+		</Folding>
+	</File>
+	<File name="Stages\Scope.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1121" topLine="28" />
+		</Cursor>
+		<Folding>
+			<Collapse line="78" />
+		</Folding>
+	</File>
+	<File name="Stages\LexicalProcessor.h" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="159" topLine="1" />
+		</Cursor>
+	</File>
+	<File name="FileReader.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="781" topLine="7" />
+		</Cursor>
+	</File>
+	<File name="main.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1505" topLine="11" />
+		</Cursor>
+		<Folding>
+			<Collapse line="7" />
+			<Collapse line="43" />
+		</Folding>
+	</File>
+	<File name="Types\Constant.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="127" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="Types\Constant.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="41" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="Types\Token.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="374" topLine="12" />
+		</Cursor>
+	</File>
+	<File name="Stages\CodeGenerator.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6845" topLine="15" />
+		</Cursor>
+		<Folding>
+			<Collapse line="10" />
+			<Collapse line="21" />
+			<Collapse line="53" />
+			<Collapse line="61" />
+			<Collapse line="66" />
+			<Collapse line="185" />
+			<Collapse line="203" />
+			<Collapse line="218" />
+		</Folding>
+	</File>
+	<File name="Types\Data.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="357" topLine="3" />
+		</Cursor>
+	</File>
+	<File name="FileReader.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1646" topLine="44" />
+		</Cursor>
+		<Folding>
+			<Collapse line="59" />
+		</Folding>
+	</File>
+	<File name="Compiler.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2708" topLine="39" />
+		</Cursor>
+	</File>
+	<File name="Types\Token.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="590" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="Types\Error.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="518" topLine="16" />
+		</Cursor>
+	</File>
+	<File name="Types\Type.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="920" topLine="11" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

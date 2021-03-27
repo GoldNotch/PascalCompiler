@@ -1,0 +1,26 @@
+program test;
+var a,b,c: Integer;
+d,e,f,g,h,i: Boolean;
+
+begin
+	readln(a, b);
+	d := a = b;
+	e := a <> b;
+	f := a < b;
+	g := a > b;
+	h := a <= b;
+	i := a >= b;
+	writeln(d,e);
+	writeln(f,g);
+	writeln(h,i);
+
+	c := 0;
+	if (a < b) or True then
+		c := (a + b) / (a - b) / (a - b) + a + b;
+	writeln(c);
+	while (a < b) do
+	begin
+		a := a + 1;
+		writeln(a);
+	end;
+end.
